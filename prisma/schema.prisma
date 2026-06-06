@@ -35,13 +35,32 @@ enum Channel {
 }
 
 /// A debtor company. One client owns many invoices.
-/// invoices relation added when Invoice model is defined.
 model Client {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   companyName  String
   contactEmail String
   contactPhone String? // optional — WhatsApp deferred to Phase 2
   riskProfile  String? // free-text debtor profile for agent reasoning
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  invoices     Invoice[]
+}
+
+/// A receivable being pursued by the agent.
+/// contactAttempts and agentLogs relations added when those models are defined.
+model Invoice {
+  id              String          @id @default(cuid())
+  clientId        String
+  client          Client          @relation(fields: [clientId], references: [id])
+  amount          Decimal         @db.Decimal(12, 2) // Decimal, never Float — money requires exact precision
+  issueDate       DateTime
+  dueDate         DateTime
+  status          InvoiceStatus   @default(PENDING)
+  escalationLevel EscalationLevel @default(LEVEL_1)
+  nextActionAt    DateTime? // cron trigger; null means no pending automated action
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([nextActionAt]) // cron queries WHERE nextActionAt <= NOW() — full scan without this
+  @@index([status])
 }
