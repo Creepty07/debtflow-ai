@@ -47,7 +47,6 @@ model Client {
 }
 
 /// A receivable being pursued by the agent.
-/// agentLogs relation added when AgentLog model is defined.
 model Invoice {
   id              String           @id @default(cuid())
   clientId        String
@@ -61,6 +60,7 @@ model Invoice {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   contactAttempts ContactAttempt[]
+  agentLogs       AgentLog[]
 
   @@index([nextActionAt]) // cron queries WHERE nextActionAt <= NOW() — full scan without this
   @@index([status])
@@ -80,6 +80,23 @@ model ContactAttempt {
   delivered       Boolean         @default(false)
   opened          Boolean         @default(false) // Resend webhook tracking
   responded       Boolean         @default(false)
+
+  @@index([invoiceId])
+}
+
+/// Agent reasoning record for a single decision cycle.
+/// Separate from ContactAttempt: action (what was sent) vs. decision (why it was chosen).
+/// Written by the logging Decorator; primary tool for production debugging.
+model AgentLog {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  observation String   @db.Text // state the agent observed before deciding
+  reasoning   String   @db.Text // why the agent chose this action
+  toolCalled  String? // name of the tool invoked, if any
+  toolArgs    Json? // varies per tool — rigid schema would not fit all 6
+  toolResult  Json? // varies per tool
+  createdAt   DateTime @default(now())
 
   @@index([invoiceId])
 }
