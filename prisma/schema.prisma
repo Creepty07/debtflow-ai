@@ -33,3 +33,15 @@ enum Channel {
   EMAIL
   WHATSAPP
 }
+
+/// A debtor company. One client owns many invoices.
+/// invoices relation added when Invoice model is defined.
+model Client {
+  id           String   @id @default(cuid())
+  companyName  String
+  contactEmail String
+  contactPhone String? // optional — WhatsApp deferred to Phase 2
+  riskProfile  String? // free-text debtor profile for agent reasoning
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
