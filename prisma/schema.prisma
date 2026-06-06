@@ -11,3 +11,25 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+/// Lifecycle state of a collection case.
+enum InvoiceStatus {
+  PENDING          // no contact yet
+  IN_PROGRESS      // agent actively working
+  ESCALATED_HUMAN  // exceeded agent limits, handed to human
+  PAID
+  WRITTEN_OFF      // uncollectable
+}
+
+/// Escalation tier driven by days overdue.
+enum EscalationLevel {
+  LEVEL_1 // days 1-7, friendly tone
+  LEVEL_2 // days 8-21, direct tone
+  LEVEL_3 // days 22+, formal tone
+}
+
+/// Outbound messaging channel.
+enum Channel {
+  EMAIL
+  WHATSAPP
+}
